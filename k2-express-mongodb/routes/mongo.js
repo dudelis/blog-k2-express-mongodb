@@ -7,16 +7,33 @@ const _ = require('lodash');
 const mongoUri = 'mongodb://test-user:K2pass!@ds211865.mlab.com:11865/db-test';
 
 
+//Check that authorization is Basic and provided. Otherwise, we send the header for K2.
+router.use((req, res, next) =>{
+    const authType = (req.headers.authorization || '').split(' ')[0];
+    //Verify auth is Basic
+    if (authType != 'Basic') {
+        res.set('WWW-Authenticate', 'Basic realm="401"') // change this
+        res.status(401).send('Authentication required.') // custom message
+        return
+    }
+    //Getting credentials and use them for MongoDB authentication.
+    const base64Credentials =  req.headers.authorization.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+    req.mongoUrl = `mongodb://${credentials}@ds211865.mlab.com:11865/db-test`;
+    next();
+});
+
+//
 
 //Create - POST /collection - Create 1 item
 router.post('/:collection', function(req, res, next){
     const collection = req.params.collection;
     const dataForInsert = req.body;
-    MongoClient.connect(mongoUri, function(err, client){
+    MongoClient.connect(req.mongoUrl, function(err, client){
         const db = client.db();
         db.collection(collection).insertOne(dataForInsert, function(err, r){
-            res.send({id:r.insertedId});
-            client.close();
+            res.send({_id:r.insertedId});
+            client.close(); 
         });        
     })
 });
@@ -24,7 +41,7 @@ router.post('/:collection', function(req, res, next){
 router.get('/:collection/:id', function(req, res, next){
     const collection = req.params.collection;
     const id = req.params.id;
-    MongoClient.connect(mongoUri, function(err, client){
+    MongoClient.connect(req.mongoUrl, function(err, client){
         const db = client.db();
         db.collection(collection).findOne({_id: new ObjectId(id)}, function(err, doc){
             res.send(doc);
@@ -35,7 +52,7 @@ router.get('/:collection/:id', function(req, res, next){
 //GET /request - returns all Documents
 router.get('/:collection', function(req, res, next){
     const collection = req.params.collection;
-    MongoClient.connect(mongoUri, function(err, client){
+    MongoClient.connect(req.mongoUrl, function(err, client){
         const db = client.db();
         db.collection(collection).find({}, async function(err, docs){
             const results = await docs.toArray();
@@ -49,7 +66,7 @@ router.patch('/:collection/:id', function(req, res, next){
     const collection = req.params.collection;
     const id = req.params.id;
     const item = req.body;
-    MongoClient.connect(mongoUri, function(err, client){
+    MongoClient.connect(req.mongoUrl, function(err, client){
         const db = client.db();
         db.collection(collection).updateOne(
             {_id: new ObjectId(id)},
@@ -64,7 +81,7 @@ router.patch('/:collection/:id', function(req, res, next){
 router.delete('/:collection/:id', function(req, res, next){
     const collection = req.params.collection;
     const id = req.params.id;
-    MongoClient.connect(mongoUri, function(err, client){
+    MongoClient.connect(req.mongoUrl, function(err, client){
         const db = client.db();
         db.collection(collection).deleteOne({_id: new ObjectId(id)}, function(err, doc){
             res.send(doc);
