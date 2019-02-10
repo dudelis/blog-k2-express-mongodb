@@ -4,13 +4,15 @@ const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectId;
 const _ = require('lodash');
 
-//Check that authorization is Basic and provided. Otherwise, we send the header for K2.
+//Check that authorization is Basic and provided.
+//Otherwise, we send the header for K2.
 router.use((req, res, next) =>{
     const authType = (req.headers.authorization || '').split(' ')[0];
     //Verify auth is Basic
     if (authType != 'Basic') {
-        res.set('WWW-Authenticate', 'Basic realm="401"') // Header for K2
-        res.status(401).send('Authentication required.') // custom message
+        //Set specific Header for K2 Rest Broker
+        res.set('WWW-Authenticate', 'Basic realm="401"')
+        res.status(401).send('Authentication required.')
         return
     }
     //Getting credentials and use them for MongoDB authentication.
@@ -26,10 +28,12 @@ router.post('/:collection', function(req, res, next){
     const dataForInsert = req.body;
     MongoClient.connect(req.mongoUrl, function(err, client){
         const db = client.db();
-        db.collection(collection).insertOne(dataForInsert, function(err, r){
-            res.send({_id:r.insertedId});
-            client.close(); 
-        });        
+        db.collection(collection).insertOne(dataForInsert,
+            function(err, r){
+                res.send({_id:r.insertedId});
+                client.close(); 
+            }
+        );        
     })
 });
 
@@ -39,10 +43,12 @@ router.get('/:collection/:id', function(req, res, next){
     const id = req.params.id;
     MongoClient.connect(req.mongoUrl, function(err, client){
         const db = client.db();
-        db.collection(collection).findOne({_id: new ObjectId(id)}, function(err, doc){
-            res.send(doc);
-            client.close();
-        });
+        db.collection(collection).findOne({_id: new ObjectId(id)},
+            function(err, doc){
+                res.send(doc);
+                client.close();
+            }
+        );
     })
 });
 
@@ -51,11 +57,13 @@ router.get('/:collection', function(req, res, next){
     const collection = req.params.collection;
     MongoClient.connect(req.mongoUrl, function(err, client){
         const db = client.db();
-        db.collection(collection).find({}, async function(err, docs){
-            const results = await docs.toArray();
-            res.send(results);
-            client.close();
-        } );        
+        db.collection(collection).find({},
+            async function(err, docs){
+                const results = await docs.toArray();
+                res.send(results);
+                client.close();
+            }
+        );        
     })
 });
 
@@ -82,10 +90,13 @@ router.delete('/:collection/:id', function(req, res, next){
     const id = req.params.id;
     MongoClient.connect(req.mongoUrl, function(err, client){
         const db = client.db();
-        db.collection(collection).deleteOne({_id: new ObjectId(id)}, function(err, doc){
-            res.send(doc);
-            client.close();
-        })
+        db.collection(collection).deleteOne(
+            {_id: new ObjectId(id)},
+            function(err, doc){
+                res.send(doc);
+                client.close();
+            }
+        )
     })
 });
 
