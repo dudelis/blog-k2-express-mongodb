@@ -4,15 +4,12 @@ const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectId;
 const _ = require('lodash');
 
-const mongoUri = 'mongodb://test-user:K2pass!@ds211865.mlab.com:11865/db-test';
-
-
 //Check that authorization is Basic and provided. Otherwise, we send the header for K2.
 router.use((req, res, next) =>{
     const authType = (req.headers.authorization || '').split(' ')[0];
     //Verify auth is Basic
     if (authType != 'Basic') {
-        res.set('WWW-Authenticate', 'Basic realm="401"') // change this
+        res.set('WWW-Authenticate', 'Basic realm="401"') // Header for K2
         res.status(401).send('Authentication required.') // custom message
         return
     }
@@ -23,9 +20,7 @@ router.use((req, res, next) =>{
     next();
 });
 
-//
-
-//Create - POST /collection - Create 1 item
+//Create - POST /request - Creates 1 item
 router.post('/:collection', function(req, res, next){
     const collection = req.params.collection;
     const dataForInsert = req.body;
@@ -37,6 +32,7 @@ router.post('/:collection', function(req, res, next){
         });        
     })
 });
+
 //GET /request/:id - Returns 1 document
 router.get('/:collection/:id', function(req, res, next){
     const collection = req.params.collection;
@@ -49,6 +45,7 @@ router.get('/:collection/:id', function(req, res, next){
         });
     })
 });
+
 //GET /request - returns all Documents
 router.get('/:collection', function(req, res, next){
     const collection = req.params.collection;
@@ -61,6 +58,7 @@ router.get('/:collection', function(req, res, next){
         } );        
     })
 });
+
 //PATCH /request/:id - Updates a document
 router.patch('/:collection/:id', function(req, res, next){
     const collection = req.params.collection;
@@ -77,6 +75,7 @@ router.patch('/:collection/:id', function(req, res, next){
         } )
     })
 });
+
 //DELETE /request/:id - Deletes a document
 router.delete('/:collection/:id', function(req, res, next){
     const collection = req.params.collection;
