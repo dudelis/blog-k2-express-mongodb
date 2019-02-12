@@ -5,9 +5,10 @@
     "description": "Sample file",
     "version": "0.0.1"
   },
-  "host": "localhost:3000",
+  "host": "blog-k2-mongodb.azurewebsites.net",
   "schemes": [
-    "http"
+    "http",
+		"https"
   ],
   "produces": [
     "application/json"
@@ -36,7 +37,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "type": "string"
+              "$ref": "#/definitions/Request"
             }
           },
           "default": {
